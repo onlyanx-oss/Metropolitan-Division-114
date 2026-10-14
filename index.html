@@ -2,6 +2,7 @@
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Metropolitan Division · LSPD</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -264,15 +265,19 @@ footer a{color:#cfe0fa;display:block;text-decoration:none;padding:1px 0}footer a
 <script>
 const $=s=>document.querySelector(s);
 const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){alert('No se pudo guardar (almacenamiento lleno).');return false}}};
-const CODE='METRO114';let mem={};
+/* ===== CONFIGURACIÓN DE LA BASE DE DATOS (Supabase) =====
+   Pega aquí la URL del proyecto y la clave pública "anon" (NUNCA la service_role). */
+const SUPABASE_URL='PEGA_AQUI_LA_URL_DE_TU_PROYECTO',SUPABASE_KEY='PEGA_AQUI_LA_CLAVE_ANON',EMAIL_DOMAIN='metropolitan-division.app';
+const sb=(!SUPABASE_URL.startsWith('PEGA')&&window.supabase)?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+let ME=null,USERS=[];
 const pub=[['inicio','Inicio'],['acerca','La 114'],['swat','SWAT'],['reclutamiento','Reclutamiento'],['contacto','Contacto']];
 const tabs=[['panel','Panel'],['reglamento','Normativa'],['subdiv','Subdivisiones'],['uniformes','Uniformidad'],['vehiculos','Vehículos'],['formacion','Formación'],['capacitaciones','Capacitaciones'],['informes','Informes'],['roster','Cuentas']];
-const users=()=>S.get('md_users',[]);
-function me(){const u=S.get('md_session',null);return u&&users().find(x=>x.user===u)}
+const users=()=>USERS;
+function me(){return ME}
 function drawNav(){const m=me(),r=(location.hash||'#inicio').slice(1);
 $('#nav').innerHTML=pub.map(([k,t])=>`<a href="#${k}" class="${r==k?'on':''}">${t}</a>`).join('')+
 (m?`<a href="#miembros" class="${r=='miembros'?'on':''}">Zona miembros</a><button id="out">Salir</button>`:`<a href="#acceso" class="cta">Acceso miembros</a>`);
-if(m)$('#out').onclick=()=>{S.set('md_session',null);location.hash='#inicio';route()}}
+if(m)$('#out').onclick=async()=>{if(sb)await sb.auth.signOut();ME=null;USERS=[];location.hash='#inicio';route()}}
 function route(){let r=(location.hash||'#inicio').slice(1);
 if(r=='miembros'&&!me())r='acceso';
 if(!document.getElementById('p-'+r))r='inicio';
@@ -286,7 +291,7 @@ $('#sub').innerHTML=tabs.filter(([k])=>k!='roster'||canDel()).map(([k,t])=>`<but
 document.querySelectorAll('#sub button').forEach(b=>b.onclick=()=>showTab(b.dataset.k));showTab('panel')}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CMD=['Comandante','Subcomandante'],RKS=['Comandante','Subcomandante','Supervisor','Oficial','Aspirante'];
-const canDel=()=>{const m=me();return !!m&&CMD.includes(m.rank)};
+const canDel=()=>{const m=me();return !!m&&(CMD.includes(m.rank)||m.admin)};const isAdmin=()=>!!ME&&ME.admin;
 const nmOf=u=>{const x=users().find(y=>y.user==u);return x?x.name:u};
 function drawInf(){const l=S.get('md_inf',[]),c=canDel();$('#ib').innerHTML=l.length?l.map((i,n)=>`<tr><td>${esc(i.d)}</td><td>${esc(nmOf(i.a))}</td><td>${esc(i.t)}</td><td>${esc((i.p||[]).join(', '))}</td><td>${esc(i.c)}</td><td>${c?`<button class="del" data-i="${n}">Borrar</button>`:''}</td></tr>`).join(''):'<tr><td colspan=6>Aún no hay informes.</td></tr>';
 document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='¿Seguro?';setTimeout(()=>{b.classList.remove('sure');b.textContent='Borrar'},3000);return}
@@ -304,19 +309,37 @@ document.querySelectorAll('#cb .cap button').forEach(b=>b.onclick=()=>{if(!canDe
 const fc=$('#fcat');if(fc)fc.onsubmit=e=>{e.preventDefault();const v=$('#cn').value.trim();if(!v||!canDel())return;const k=cat().slice();if(!k.includes(v))k.push(v);S.set('md_cat',k);drawCap()};
 document.querySelectorAll('#capcat .cap button').forEach(b=>b.onclick=()=>{if(!canDel())return;const k=cat().slice();k.splice(+b.dataset.cj,1);S.set('md_cat',k);drawCap()})}
 function drawPart(){const n=[...new Set(R.flatMap(([p,l])=>l.map(a=>a[0])))];$('#ip').innerHTML=n.map(x=>`<label><input type="checkbox" value="${esc(x)}"> ${esc(x)}</label>`).join('')}
-function drawRos(){const c=canDel(),us=users();
+function drawRos(){const c=isAdmin(),us=users();
 $('#rb').innerHTML=us.map(u=>`<tr><td>${esc(u.user)}</td><td>${esc(u.name)}</td><td>${c?`<select class="rs" data-u="${esc(u.user)}">${RKS.map(r=>`<option${r==u.rank?' selected':''}>${r}</option>`).join('')}</select>`:esc(u.rank)}</td></tr>`).join('')||'<tr><td colspan=3>Aún no hay cuentas.</td></tr>';
-document.querySelectorAll('.rs').forEach(s=>s.onchange=()=>{if(!canDel())return;const u=users(),x=u.find(y=>y.user==s.dataset.u);if(x){x.rank=s.value;S.set('md_users',u)}});
+document.querySelectorAll('.rs').forEach(s=>s.onchange=async()=>{if(!isAdmin()||!sb)return;const x=users().find(y=>y.user==s.dataset.u);if(!x)return;const {error}=await sb.from('profiles').update({division_rank:s.value}).eq('id',x.id);if(error)alert('No se pudo cambiar el rango: '+error.message);await loadUsers();drawRos()});
 const nm=s=>s.toLowerCase().replace(/^(cmdt|sgt i+|po i+\+?|lt i+)\s+/,'').replace(/[^a-záéíóúñ ]/g,'').trim();
 const names=[...new Set(R.flatMap(([p,l])=>l.map(a=>a[0])))];let ok=0;
 $('#rc2').innerHTML=names.map(n=>{const k=nm(n),u=us.find(x=>{const y=nm(x.name);return y&&(y==k||k.includes(y)||y.includes(k))});if(u)ok++;return `<tr><td>${esc(n)}</td><td>${u?`<span class="yes">Con cuenta</span> (${esc(u.user)})`:'<span class="no">Sin cuenta</span>'}</td></tr>`}).join('');
-$('#rsum').textContent='Cuentas registradas: '+us.length+' · Miembros de la plantilla con cuenta: '+ok+' de '+names.length}
-$('#fr').onsubmit=e=>{e.preventDefault();const u=users(),us=$('#ru').value.trim(),m=$('#mr');m.className='msg';
-if($('#rc').value.trim().toUpperCase()!==CODE){m.textContent='Código de la División incorrecto.';return}
-if(u.some(x=>x.user.toLowerCase()==us.toLowerCase())){m.textContent='Ese usuario ya existe.';return}
-u.push({user:us,name:$('#rn').value.trim(),pass:$('#rp').value,rank:u.length?'Aspirante':'Comandante'});S.set('md_users',u);S.set('md_session',us);location.hash='#miembros';route()};
-$('#fl').onsubmit=e=>{e.preventDefault();const x=users().find(u=>u.user.toLowerCase()==$('#lu').value.trim().toLowerCase()&&u.pass==$('#lp').value);
-if(!x){$('#ml').textContent='Usuario o contraseña incorrectos.';return}S.set('md_session',x.user);location.hash='#miembros';route()};
+$('#rsum').textContent='Cuentas registradas: '+us.length+' · Miembros de la plantilla con cuenta: '+ok+' de '+names.length+(isAdmin()?'':' · Solo los administradores pueden cambiar rangos')}
+const uemail=u=>u.toLowerCase()+'@'+EMAIL_DOMAIN;
+const PCOLS='id,username,full_name,division_rank,is_admin';
+const toU=p=>({id:p.id,user:p.username,name:p.full_name,rank:p.division_rank,admin:p.is_admin});
+async function loadUsers(){USERS=[];if(!sb||!ME)return;
+if(!(ME.admin||CMD.includes(ME.rank))){USERS=[ME];return}
+const {data}=await sb.from('profiles').select(PCOLS).order('created_at');USERS=(data||[]).map(toU)}
+async function loadMe(){ME=null;if(!sb)return;const r=await sb.auth.getSession(),ses=r.data&&r.data.session;if(!ses)return;
+const {data}=await sb.from('profiles').select(PCOLS).eq('id',ses.user.id).maybeSingle();
+if(data)ME=toU(data);await loadUsers()}
+async function boot(){try{await loadMe()}catch(e){console.error(e)}route()}
+$('#fr').onsubmit=async e=>{e.preventDefault();const m=$('#mr');m.className='msg';
+if(!sb){m.textContent='La base de datos aún no está configurada.';return}
+const us=$('#ru').value.trim().toLowerCase();
+if(!/^[a-z0-9._-]{2,30}$/.test(us)){m.textContent='El usuario solo puede llevar letras, números, punto, guion y guion bajo (2 a 30 caracteres).';return}
+m.textContent='Creando cuenta…';
+const {data,error}=await sb.auth.signUp({email:uemail(us),password:$('#rp').value,options:{data:{username:us,full_name:$('#rn').value.trim(),code:$('#rc').value.trim()}}});
+if(error){m.textContent='No se pudo crear la cuenta: el usuario ya existe o el código es incorrecto.';console.error(error);return}
+if(!data.session){m.className='msg ok';m.textContent='Cuenta creada. Ya puedes iniciar sesión.';return}
+await loadMe();location.hash='#miembros';route()};
+$('#fl').onsubmit=async e=>{e.preventDefault();const m=$('#ml');m.className='msg';
+if(!sb){m.textContent='La base de datos aún no está configurada.';return}
+const {error}=await sb.auth.signInWithPassword({email:uemail($('#lu').value.trim()),password:$('#lp').value});
+if(error){m.textContent='Usuario o contraseña incorrectos.';return}
+await loadMe();location.hash='#miembros';route()};
 $('#fi').onsubmit=e=>{e.preventDefault();const l=S.get('md_inf',[]);l.unshift({d:new Date().toLocaleDateString('es-ES'),a:me().name,t:$('#it').value,c:$('#ic').value,p:[...document.querySelectorAll('#ip input:checked')].map(x=>x.value)});S.set('md_inf',l);e.target.reset();drawInf()};
 
 const SUBS=['SIERRA','BQ','H','UDU','CNT'],ALL=SUBS.join(',');
@@ -374,5 +397,5 @@ if(file)rsz(file,720,save);else save()};
 e.onclick=ev=>{const b=ev.target.closest('[data-a]');if(!b||!canDel())return;const a=b.dataset.a,i=+b.dataset.i;
 if(a=='add'){ED={k,i:-1};drawColl(k)}else if(a=='ed'){ED={k,i};drawColl(k)}else if(a=='cx'){ED=null;drawColl(k)}
 else if(a=='rm'){if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='¿Seguro?';setTimeout(()=>{b.classList.remove('sure');b.textContent='Borrar'},3000);return}const l2=coll(k).slice();l2.splice(i,1);S.set('md_'+k,l2);drawColl(k)}}}
-addEventListener('hashchange',route);route();
+addEventListener('hashchange',route);route();boot();
 </script></body></html>
