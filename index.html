@@ -267,7 +267,7 @@ const $=s=>document.querySelector(s);
 const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){alert('No se pudo guardar (almacenamiento lleno).');return false}}};
 /* ===== CONFIGURACIÓN DE LA BASE DE DATOS (Supabase) =====
    Pega aquí la URL del proyecto y la clave pública "anon" (NUNCA la service_role). */
-const SUPABASE_URL='PEGA_AQUI_LA_URL_DE_TU_PROYECTO',SUPABASE_KEY='PEGA_AQUI_LA_CLAVE_ANON',EMAIL_DOMAIN='metropolitan-division.app';
+const SUPABASE_URL='https://metropolitan-division-114.vercel.app',SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZHByamdmaGtxa2tpbmpxYml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5ODcyNzgsImV4cCI6MjEwNzU2MzI3OH0.rY0JjsIAKLI5I6udUj3sqjIATmcqa6VLTS7SotRiT3Y',EMAIL_DOMAIN='metropolitan-division.app';
 const sb=(!SUPABASE_URL.startsWith('PEGA')&&window.supabase)?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 let ME=null,USERS=[];
 const pub=[['inicio','Inicio'],['acerca','La 114'],['swat','SWAT'],['reclutamiento','Reclutamiento'],['contacto','Contacto']];
