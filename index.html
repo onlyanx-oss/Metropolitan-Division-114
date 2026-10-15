@@ -273,7 +273,7 @@ const $=s=>document.querySelector(s);
 const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){alert('No se pudo guardar (almacenamiento lleno).');return false}}};
 /* ===== CONFIGURACIÓN DE LA BASE DE DATOS (Supabase) =====
    Pega aquí la URL del proyecto y la clave pública "anon" (NUNCA la service_role). */
-const SUPABASE_URL='https://jidprjgfhkqkkinjqbiy.supabase.co/rest/v1/',SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZHByamdmaGtxa2tpbmpxYml5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTk4NzI3OCwiZXhwIjoyMTA3NTYzMjc4fQ.8A75lT3GvvQHyIwtWUCuuF_tUd-HCerULRrZKw_aYKE',EMAIL_DOMAIN='metropolitan-division.app';
+const SUPABASE_URL='https://jidprjgfhkqkkinjqbiy.supabase.co',SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZHByamdmaGtxa2tpbmpxYml5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTk4NzI3OCwiZXhwIjoyMTA3NTYzMjc4fQ.8A75lT3GvvQHyIwtWUCuuF_tUd-HCerULRrZKw_aYKE',EMAIL_DOMAIN='metropolitan-division.app';
 const _u=SUPABASE_URL.trim(),_k=SUPABASE_KEY.trim();
 const DBWHY=(_u.startsWith('PEGA')||_k.startsWith('PEGA')||!_u||!_k)?'nocfg':(!/^https:\/\/[^\/\s]+\/?$/.test(_u)||/supabase\.com/.test(_u))?'url':!window.supabase?'lib':'';
 const sb=DBWHY?null:window.supabase.createClient(_u,_k);
