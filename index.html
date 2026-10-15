@@ -3,6 +3,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Metropolitan Division · LSPD</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>')</script>
+<script>window.supabase||document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>')</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -222,7 +224,8 @@ footer a{color:#cfe0fa;display:block;text-decoration:none;padding:1px 0}footer a
 <form id="fl"><label>Placa / Usuario<input id="lu" required></label><label>Contraseña<input id="lp" type="password" required></label><button class="btn">Entrar</button><div class="msg" id="ml"></div></form></div>
 <div class="card"><h3>Registrarse</h3>
 <form id="fr"><label>Nombre y apellidos<input id="rn" required></label><label>Placa / Usuario<input id="ru" required></label><label>Contraseña<input id="rp" type="password" minlength="6" required></label><label>Código de la División<input id="rc" required></label><button class="btn">Crear cuenta</button><div class="msg" id="mr"></div></form></div></div>
-<p class="note" style="margin-top:14px">Para registrarte necesitas el código de la División que te facilite la comandancia.</p></section>
+<p class="note" style="margin-top:14px">Para registrarte necesitas el código de la División que te facilite la comandancia.</p>
+<p class="msg" id="dbs" style="margin-top:8px"></p></section>
 
 <section id="p-miembros" class="page">
 <h2>Zona de miembros</h2><p id="hi" style="color:var(--mut)"></p>
@@ -267,8 +270,20 @@ const $=s=>document.querySelector(s);
 const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){alert('No se pudo guardar (almacenamiento lleno).');return false}}};
 /* ===== CONFIGURACIÓN DE LA BASE DE DATOS (Supabase) =====
    Pega aquí la URL del proyecto y la clave pública "anon" (NUNCA la service_role). */
-const SUPABASE_URL='https://metropolitan-division-114.vercel.app',SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZHByamdmaGtxa2tpbmpxYml5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5ODcyNzgsImV4cCI6MjEwNzU2MzI3OH0.rY0JjsIAKLI5I6udUj3sqjIATmcqa6VLTS7SotRiT3Y',EMAIL_DOMAIN='metropolitan-division.app';
-const sb=(!SUPABASE_URL.startsWith('PEGA')&&window.supabase)?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+const SUPABASE_URL='https://metropolitan-division-114-git-main-metropolitan-division.vercel.app',SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZHByamdmaGtxa2tpbmpxYml5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTk4NzI3OCwiZXhwIjoyMTA3NTYzMjc4fQ.8A75lT3GvvQHyIwtWUCuuF_tUd-HCerULRrZKw_aYKE',EMAIL_DOMAIN='metropolitan-division.app';
+const _u=SUPABASE_URL.trim(),_k=SUPABASE_KEY.trim();
+const DBWHY=(_u.startsWith('PEGA')||_k.startsWith('PEGA')||!_u||!_k)?'nocfg':(!/^https:\/\/[^\/\s]+\/?$/.test(_u)||/supabase\.com/.test(_u))?'url':!window.supabase?'lib':'';
+const sb=DBWHY?null:window.supabase.createClient(_u,_k);
+const DBMSG={nocfg:'La base de datos no está configurada: faltan SUPABASE_URL y SUPABASE_KEY en index.html (y volver a publicar).',url:'La URL de Supabase no es correcta. Debe ser la "Project URL" del tipo https://xxxx.supabase.co (no la dirección del panel).',lib:'No se pudo cargar la librería de Supabase. Recarga sin caché (Ctrl+F5) o desactiva el bloqueador de anuncios.'};
+async function dbStatus(){if(!sb)return[false,DBMSG[DBWHY]];
+try{const {error}=await sb.from('profiles').select('id').limit(1);
+if(!error)return[true,'Base de datos conectada.'];
+const t=(error.code||'')+' '+(error.message||'');
+if(/42501|permission denied/i.test(t))return[true,'Base de datos conectada.'];
+if(/PGRST205|42P01|does not exist|schema cache/i.test(t))return[false,'Conectado a Supabase, pero falta la tabla "profiles": ejecuta schema.sql en el SQL Editor.'];
+if(/invalid api key|apikey|jwt/i.test(t))return[false,'La clave SUPABASE_KEY no es válida: usa la clave "anon / public" del proyecto.'];
+if(/failed to fetch|network/i.test(t))return[false,'No se puede conectar con la URL de Supabase. Revísala.'];
+return[false,'Error de la base de datos: '+(error.message||error.code)]}catch(e){return[false,'Error de conexión: '+e.message]}}
 let ME=null,USERS=[];
 const pub=[['inicio','Inicio'],['acerca','La 114'],['swat','SWAT'],['reclutamiento','Reclutamiento'],['contacto','Contacto']];
 const tabs=[['panel','Panel'],['reglamento','Normativa'],['subdiv','Subdivisiones'],['uniformes','Uniformidad'],['vehiculos','Vehículos'],['formacion','Formación'],['capacitaciones','Capacitaciones'],['informes','Informes'],['roster','Cuentas']];
@@ -325,9 +340,9 @@ const {data}=await sb.from('profiles').select(PCOLS).order('created_at');USERS=(
 async function loadMe(){ME=null;if(!sb)return;const r=await sb.auth.getSession(),ses=r.data&&r.data.session;if(!ses)return;
 const {data}=await sb.from('profiles').select(PCOLS).eq('id',ses.user.id).maybeSingle();
 if(data)ME=toU(data);await loadUsers()}
-async function boot(){try{await loadMe()}catch(e){console.error(e)}route()}
+async function boot(){dbStatus().then(([ok,t])=>{const e=$('#dbs');e.textContent=t;e.className='msg'+(ok?' ok':'');console.log('[DB]',t)});try{await loadMe()}catch(e){console.error(e)}route()}
 $('#fr').onsubmit=async e=>{e.preventDefault();const m=$('#mr');m.className='msg';
-if(!sb){m.textContent='La base de datos aún no está configurada.';return}
+if(!sb){m.textContent=DBMSG[DBWHY];return}
 const us=$('#ru').value.trim().toLowerCase();
 if(!/^[a-z0-9._-]{2,30}$/.test(us)){m.textContent='El usuario solo puede llevar letras, números, punto, guion y guion bajo (2 a 30 caracteres).';return}
 m.textContent='Creando cuenta…';
@@ -336,7 +351,7 @@ if(error){m.textContent='No se pudo crear la cuenta: el usuario ya existe o el c
 if(!data.session){m.className='msg ok';m.textContent='Cuenta creada. Ya puedes iniciar sesión.';return}
 await loadMe();location.hash='#miembros';route()};
 $('#fl').onsubmit=async e=>{e.preventDefault();const m=$('#ml');m.className='msg';
-if(!sb){m.textContent='La base de datos aún no está configurada.';return}
+if(!sb){m.textContent=DBMSG[DBWHY];return}
 const {error}=await sb.auth.signInWithPassword({email:uemail($('#lu').value.trim()),password:$('#lp').value});
 if(error){m.textContent='Usuario o contraseña incorrectos.';return}
 await loadMe();location.hash='#miembros';route()};
