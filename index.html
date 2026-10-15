@@ -172,6 +172,7 @@ footer a{color:#cfe0fa;display:block;text-decoration:none;padding:1px 0}footer a
 @media(max-width:720px){.fg{grid-template-columns:1fr}.quick{margin:-30px 10px 0}.hc{padding:28px 18px 90px}}
 .hero{min-height:490px}
 .hs::after{background:linear-gradient(90deg,rgba(10,30,60,.82),rgba(10,30,60,.38) 60%,rgba(10,30,60,.1))}
+.bigcode{font:700 32px 'Oswald',sans-serif;letter-spacing:6px;color:var(--navy);background:#f1f5fb;border:2px dashed var(--gold);border-radius:12px;padding:12px;margin:10px 0}
 </style></head><body>
 <div class="topbar"><span>Los Santos Police Department · Metropolitan Division</span><span class="em">Emergencias · 911</span></div>
 <header><div class="bar">
@@ -223,7 +224,9 @@ footer a{color:#cfe0fa;display:block;text-decoration:none;padding:1px 0}footer a
 <div class="grid"><div class="card"><h3>Iniciar sesión</h3>
 <form id="fl"><label>Placa / Usuario<input id="lu" required></label><label>Contraseña<input id="lp" type="password" required></label><button class="btn">Entrar</button><div class="msg" id="ml"></div></form></div>
 <div class="card"><h3>Registrarse</h3>
-<form id="fr"><label>Nombre y apellidos<input id="rn" required></label><label>Placa / Usuario<input id="ru" required></label><label>Contraseña<input id="rp" type="password" minlength="6" required></label><label>Código de la División<input id="rc" required></label><button class="btn">Crear cuenta</button><div class="msg" id="mr"></div></form></div></div>
+<form id="fr"><label>Nombre y apellidos<input id="rn" required></label><label>Placa / Usuario<input id="ru" required></label><label>Contraseña<input id="rp" type="password" minlength="6" required></label><label>Código de la División<input id="rc" required></label><button class="btn">Crear cuenta</button><div class="msg" id="mr"></div></form></div>
+<div class="card"><h3>¿Olvidaste la contraseña?</h3><p style="margin-bottom:10px;font-size:15px">Pide un código de restablecimiento a la comandancia y úsalo aquí.</p>
+<form id="fp"><label>Usuario<input id="pu" required autocomplete="username"></label><label>Código de restablecimiento<input id="pc" required placeholder="XXXX-XXXX" autocomplete="off"></label><label>Nueva contraseña<input id="pn" type="password" minlength="6" required autocomplete="new-password"></label><button class="btn">Cambiar contraseña</button><div class="msg" id="mp"></div></form></div></div>
 <p class="note" style="margin-top:14px">Para registrarte necesitas el código de la División que te facilite la comandancia.</p>
 <p class="msg" id="dbs" style="margin-top:8px"></p></section>
 
@@ -257,7 +260,7 @@ footer a{color:#cfe0fa;display:block;text-decoration:none;padding:1px 0}footer a
 <div class="sec" id="s-informes"><div class="card"><h3>Nuevo informe de operación</h3>
 <form id="fi" style="max-width:100%"><input id="it" placeholder="Título" required><textarea id="ic" rows="3" placeholder="Descripción" required></textarea><label>Miembros participantes</label><div id="ip" class="chk"></div><button class="btn" style="justify-self:start">Guardar informe</button></form></div>
 <div class="wrap" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Autor</th><th>Título</th><th>Participantes</th><th>Detalle</th><th></th></tr></thead><tbody id="ib"></tbody></table></div></div>
-<div class="sec" id="s-roster"><p class="note" id="rsum" style="margin-bottom:12px"></p><h3 class="h3">Cuentas registradas</h3><div class="wrap card" style="padding:0"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rango</th></tr></thead><tbody id="rb"></tbody></table></div>
+<div class="sec" id="s-roster"><p class="note" id="rsum" style="margin-bottom:12px"></p><h3 class="h3">Cuentas registradas</h3><div class="wrap card" style="padding:0"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rango</th><th>Contraseña</th></tr></thead><tbody id="rb"></tbody></table></div>
 <h3 class="h3">Plantilla: ¿quién tiene cuenta?</h3><div class="wrap card" style="padding:0"><table><thead><tr><th>Agente</th><th>Estado</th></tr></thead><tbody id="rc2"></tbody></table></div></div>
 </section>
 </main>
@@ -270,7 +273,7 @@ const $=s=>document.querySelector(s);
 const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){alert('No se pudo guardar (almacenamiento lleno).');return false}}};
 /* ===== CONFIGURACIÓN DE LA BASE DE DATOS (Supabase) =====
    Pega aquí la URL del proyecto y la clave pública "anon" (NUNCA la service_role). */
-const SUPABASE_URL='https://metropolitan-division-114-git-main-metropolitan-division.vercel.app',SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZHByamdmaGtxa2tpbmpxYml5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTk4NzI3OCwiZXhwIjoyMTA3NTYzMjc4fQ.8A75lT3GvvQHyIwtWUCuuF_tUd-HCerULRrZKw_aYKE',EMAIL_DOMAIN='metropolitan-division.app';
+const SUPABASE_URL='https://jidprjgfhkqkkinjqbiy.supabase.co/rest/v1/',SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZHByamdmaGtxa2tpbmpxYml5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTk4NzI3OCwiZXhwIjoyMTA3NTYzMjc4fQ.8A75lT3GvvQHyIwtWUCuuF_tUd-HCerULRrZKw_aYKE',EMAIL_DOMAIN='metropolitan-division.app';
 const _u=SUPABASE_URL.trim(),_k=SUPABASE_KEY.trim();
 const DBWHY=(_u.startsWith('PEGA')||_k.startsWith('PEGA')||!_u||!_k)?'nocfg':(!/^https:\/\/[^\/\s]+\/?$/.test(_u)||/supabase\.com/.test(_u))?'url':!window.supabase?'lib':'';
 const sb=DBWHY?null:window.supabase.createClient(_u,_k);
@@ -324,9 +327,17 @@ document.querySelectorAll('#cb .cap button').forEach(b=>b.onclick=()=>{if(!canDe
 const fc=$('#fcat');if(fc)fc.onsubmit=e=>{e.preventDefault();const v=$('#cn').value.trim();if(!v||!canDel())return;const k=cat().slice();if(!k.includes(v))k.push(v);S.set('md_cat',k);drawCap()};
 document.querySelectorAll('#capcat .cap button').forEach(b=>b.onclick=()=>{if(!canDel())return;const k=cat().slice();k.splice(+b.dataset.cj,1);S.set('md_cat',k);drawCap()})}
 function drawPart(){const n=[...new Set(R.flatMap(([p,l])=>l.map(a=>a[0])))];$('#ip').innerHTML=n.map(x=>`<label><input type="checkbox" value="${esc(x)}"> ${esc(x)}</label>`).join('')}
+const RKORD=['Aspirante','Oficial','Supervisor','Subcomandante','Comandante'];
+function canReset(u){if(!ME||u.id===ME.id)return false;if(ME.admin)return true;if(!CMD.includes(ME.rank)||u.admin)return false;return RKORD.indexOf(u.rank)<RKORD.indexOf(ME.rank)}
+function showCode(u,c){const d=document.createElement('div');d.className='pe';
+d.innerHTML=`<div class="pb card" style="text-align:center"><h3>Código de restablecimiento</h3><p>Usuario: <b>${esc(u)}</b></p><div class="bigcode">${esc(c)}</div><p style="font-size:14px">Válido durante 1 hora y de un solo uso. Dáselo únicamente a esa persona.</p><div style="display:flex;gap:8px;justify-content:center;margin-top:12px"><button class="btn" id="cc">Copiar</button><button class="btn alt2" id="cx2">Cerrar</button></div></div>`;
+document.body.appendChild(d);d.querySelector('#cx2').onclick=()=>d.remove();
+d.querySelector('#cc').onclick=()=>{try{navigator.clipboard.writeText(c);d.querySelector('#cc').textContent='Copiado'}catch(e){}}}
 function drawRos(){const c=isAdmin(),us=users();
-$('#rb').innerHTML=us.map(u=>`<tr><td>${esc(u.user)}</td><td>${esc(u.name)}</td><td>${c?`<select class="rs" data-u="${esc(u.user)}">${RKS.map(r=>`<option${r==u.rank?' selected':''}>${r}</option>`).join('')}</select>`:esc(u.rank)}</td></tr>`).join('')||'<tr><td colspan=3>Aún no hay cuentas.</td></tr>';
+$('#rb').innerHTML=us.map(u=>`<tr><td>${esc(u.user)}</td><td>${esc(u.name)}</td><td>${c?`<select class="rs" data-u="${esc(u.user)}">${RKS.map(r=>`<option${r==u.rank?' selected':''}>${r}</option>`).join('')}</select>`:esc(u.rank)}</td><td>${canReset(u)?`<button class="up rsb" data-u="${esc(u.user)}">Generar código</button>`:''}</td></tr>`).join('')||'<tr><td colspan=4>Aún no hay cuentas.</td></tr>';
 document.querySelectorAll('.rs').forEach(s=>s.onchange=async()=>{if(!isAdmin()||!sb)return;const x=users().find(y=>y.user==s.dataset.u);if(!x)return;const {error}=await sb.from('profiles').update({division_rank:s.value}).eq('id',x.id);if(error)alert('No se pudo cambiar el rango: '+error.message);await loadUsers();drawRos()});
+document.querySelectorAll('.rsb').forEach(b=>b.onclick=async()=>{if(!sb)return;b.disabled=true;const {data,error}=await sb.rpc('create_reset_code',{p_username:b.dataset.u});b.disabled=false;
+if(error){alert('No se pudo generar el código: '+error.message);return}showCode(b.dataset.u,data)});
 const nm=s=>s.toLowerCase().replace(/^(cmdt|sgt i+|po i+\+?|lt i+)\s+/,'').replace(/[^a-záéíóúñ ]/g,'').trim();
 const names=[...new Set(R.flatMap(([p,l])=>l.map(a=>a[0])))];let ok=0;
 $('#rc2').innerHTML=names.map(n=>{const k=nm(n),u=us.find(x=>{const y=nm(x.name);return y&&(y==k||k.includes(y)||y.includes(k))});if(u)ok++;return `<tr><td>${esc(n)}</td><td>${u?`<span class="yes">Con cuenta</span> (${esc(u.user)})`:'<span class="no">Sin cuenta</span>'}</td></tr>`}).join('');
@@ -350,6 +361,12 @@ const {data,error}=await sb.auth.signUp({email:uemail(us),password:$('#rp').valu
 if(error){m.textContent='No se pudo crear la cuenta: el usuario ya existe o el código es incorrecto.';console.error(error);return}
 if(!data.session){m.className='msg ok';m.textContent='Cuenta creada. Ya puedes iniciar sesión.';return}
 await loadMe();location.hash='#miembros';route()};
+$('#fp').onsubmit=async e=>{e.preventDefault();const m=$('#mp');m.className='msg';
+if(!sb){m.textContent=DBMSG[DBWHY];return}
+m.textContent='Comprobando…';
+const {data,error}=await sb.rpc('reset_password_with_code',{p_username:$('#pu').value.trim(),p_code:$('#pc').value.trim(),p_new_password:$('#pn').value});
+if(error){m.textContent=/6 caracteres/.test(error.message)?'La contraseña debe tener al menos 6 caracteres.':'No se pudo cambiar la contraseña.';console.error(error);return}
+if(data===true){m.className='msg ok';m.textContent='Contraseña cambiada. Ya puedes iniciar sesión.';e.target.reset()}else m.textContent='Código inválido, caducado o demasiados intentos. Pide uno nuevo a la comandancia.'};
 $('#fl').onsubmit=async e=>{e.preventDefault();const m=$('#ml');m.className='msg';
 if(!sb){m.textContent=DBMSG[DBWHY];return}
 const {error}=await sb.auth.signInWithPassword({email:uemail($('#lu').value.trim()),password:$('#lp').value});
